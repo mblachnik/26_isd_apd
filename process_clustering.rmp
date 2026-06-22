@@ -1,0 +1,603 @@
+<?xml version="1.0" encoding="UTF-8"?><process version="9.9.003">
+  <context>
+    <input/>
+    <output/>
+    <macros>
+      <macro>
+        <key>entryName</key>
+        <value/>
+      </macro>
+      <macro>
+        <key>resultsDir</key>
+        <value/>
+      </macro>
+      <macro>
+        <key>dataRepositoryDir</key>
+        <value/>
+      </macro>
+      <macro>
+        <key>entryNameTest</key>
+        <value/>
+      </macro>
+    </macros>
+  </context>
+  <operator activated="true" class="process" compatibility="9.9.003" expanded="true" name="Process">
+    <parameter key="logverbosity" value="init"/>
+    <parameter key="random_seed" value="2001"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
+    <process expanded="true">
+      <operator activated="true" class="retrieve" compatibility="9.9.003" expanded="true" height="68" name="Retrieve" width="90" x="45" y="86">
+        <parameter key="repository_entry" value="%{dataRepositoryDir}%{entryName}"/>
+      </operator>
+      <operator activated="true" class="extract_performance" compatibility="9.9.003" expanded="true" height="82" name="Performance MainSize" width="90" x="196" y="86">
+        <parameter key="performance_type" value="number_of_examples"/>
+        <parameter key="statistics" value="average"/>
+        <parameter key="attribute_name" value=""/>
+        <parameter key="optimization_direction" value="maximize"/>
+      </operator>
+      <operator activated="true" class="subprocess" compatibility="9.9.003" expanded="true" height="82" name="Subprocess" width="90" x="352" y="80">
+        <process expanded="true">
+          <operator activated="true" class="prules:VQ" compatibility="8.1.000" expanded="true" height="103" name="Vector Quantization (VQ)" width="90" x="83" y="308">
+            <parameter key="Number of neurons" value="20"/>
+            <parameter key="add_cluster_attribute" value="true"/>
+            <parameter key="add_as_label" value="false"/>
+            <parameter key="Iterations" value="300"/>
+            <parameter key="Alpha" value="0.1"/>
+            <parameter key="measure_types" value="MixedMeasures"/>
+            <parameter key="mixed_measure" value="MixedEuclideanDistance"/>
+            <parameter key="nominal_measure" value="NominalDistance"/>
+            <parameter key="numerical_measure" value="EuclideanDistance"/>
+            <parameter key="divergence" value="GeneralizedIDivergence"/>
+            <parameter key="kernel_type" value="radial"/>
+            <parameter key="kernel_gamma" value="1.0"/>
+            <parameter key="kernel_sigma1" value="1.0"/>
+            <parameter key="kernel_sigma2" value="0.0"/>
+            <parameter key="kernel_sigma3" value="2.0"/>
+            <parameter key="kernel_degree" value="3.0"/>
+            <parameter key="kernel_shift" value="1.0"/>
+            <parameter key="kernel_a" value="1.0"/>
+            <parameter key="kernel_b" value="0.0"/>
+            <process expanded="true">
+              <portSpacing port="source_example Set" spacing="0"/>
+              <portSpacing port="sink_codebooks" spacing="0"/>
+            </process>
+          </operator>
+          <operator activated="true" class="loop_clusters" compatibility="9.9.003" expanded="true" height="82" name="Loop Clusters" width="90" x="250" y="462">
+            <process expanded="true">
+              <operator activated="true" class="extract_macro" compatibility="9.9.003" expanded="true" height="68" name="Extract Macro" width="90" x="61" y="134">
+                <parameter key="macro" value="cluster_name"/>
+                <parameter key="macro_type" value="data_value"/>
+                <parameter key="statistics" value="average"/>
+                <parameter key="attribute_name" value="cluster"/>
+                <parameter key="example_index" value="1"/>
+                <list key="additional_macros"/>
+              </operator>
+              <operator activated="true" class="extract_performance" compatibility="9.9.003" expanded="true" height="82" name="Performance SampleSize (2)" width="90" x="195" y="143">
+                <parameter key="performance_type" value="number_of_examples"/>
+                <parameter key="statistics" value="average"/>
+                <parameter key="attribute_name" value=""/>
+                <parameter key="optimization_direction" value="maximize"/>
+              </operator>
+              <operator activated="true" class="handle_exception" compatibility="9.9.003" expanded="true" height="82" name="Handle Exception (2)" width="90" x="379" y="46">
+                <parameter key="add_details_to_log" value="false"/>
+                <process expanded="true">
+                  <operator activated="false" class="concurrency:optimize_parameters_grid" compatibility="9.9.003" expanded="true" height="124" name="Optimize Parameters SVM (2)" width="90" x="205" y="69">
+                    <list key="parameters">
+                      <parameter key="BASE&gt; SVM.gamma" value="[0.01;10;4;logarithmic]"/>
+                      <parameter key="BASE&gt; SVM.C" value="[0.01;100;4;logarithmic]"/>
+                    </list>
+                    <parameter key="error_handling" value="fail on error"/>
+                    <parameter key="log_performance" value="false"/>
+                    <parameter key="log_all_criteria" value="false"/>
+                    <parameter key="synchronize" value="false"/>
+                    <parameter key="enable_parallel_execution" value="true"/>
+                    <process expanded="true">
+                      <operator activated="true" class="concurrency:cross_validation" compatibility="9.9.003" expanded="true" height="145" name="Cross Validation SVM" width="90" x="446" y="34">
+                        <parameter key="split_on_batch_attribute" value="false"/>
+                        <parameter key="leave_one_out" value="false"/>
+                        <parameter key="number_of_folds" value="5"/>
+                        <parameter key="sampling_type" value="automatic"/>
+                        <parameter key="use_local_random_seed" value="false"/>
+                        <parameter key="local_random_seed" value="1992"/>
+                        <parameter key="enable_parallel_execution" value="true"/>
+                        <process expanded="true">
+                          <operator activated="true" class="support_vector_machine_libsvm" compatibility="9.9.003" expanded="true" height="82" name="BASE&gt; SVM" width="90" x="195" y="34">
+                            <parameter key="svm_type" value="C-SVC"/>
+                            <parameter key="kernel_type" value="rbf"/>
+                            <parameter key="degree" value="3"/>
+                            <parameter key="gamma" value="0.0"/>
+                            <parameter key="coef0" value="0.0"/>
+                            <parameter key="C" value="0.0"/>
+                            <parameter key="nu" value="0.5"/>
+                            <parameter key="cache_size" value="2048"/>
+                            <parameter key="epsilon" value="0.001"/>
+                            <parameter key="p" value="0.1"/>
+                            <list key="class_weights"/>
+                            <parameter key="shrinking" value="true"/>
+                            <parameter key="calculate_confidences" value="false"/>
+                            <parameter key="confidence_for_multiclass" value="true"/>
+                          </operator>
+                          <connect from_port="training set" to_op="BASE&gt; SVM" to_port="training set"/>
+                          <connect from_op="BASE&gt; SVM" from_port="model" to_port="model"/>
+                          <portSpacing port="source_training set" spacing="0"/>
+                          <portSpacing port="sink_model" spacing="0"/>
+                          <portSpacing port="sink_through 1" spacing="0"/>
+                        </process>
+                        <process expanded="true">
+                          <operator activated="true" class="apply_model" compatibility="9.9.003" expanded="true" height="82" name="Apply Model SVM" width="90" x="45" y="34">
+                            <list key="application_parameters"/>
+                            <parameter key="create_view" value="false"/>
+                          </operator>
+                          <operator activated="true" class="performance" compatibility="9.9.003" expanded="true" height="82" name="Performance SVM" width="90" x="246" y="34">
+                            <parameter key="use_example_weights" value="true"/>
+                          </operator>
+                          <connect from_port="model" to_op="Apply Model SVM" to_port="model"/>
+                          <connect from_port="test set" to_op="Apply Model SVM" to_port="unlabelled data"/>
+                          <connect from_op="Apply Model SVM" from_port="labelled data" to_op="Performance SVM" to_port="labelled data"/>
+                          <connect from_op="Performance SVM" from_port="performance" to_port="performance 1"/>
+                          <portSpacing port="source_model" spacing="0"/>
+                          <portSpacing port="source_test set" spacing="0"/>
+                          <portSpacing port="source_through 1" spacing="0"/>
+                          <portSpacing port="sink_test set results" spacing="0"/>
+                          <portSpacing port="sink_performance 1" spacing="0"/>
+                          <portSpacing port="sink_performance 2" spacing="0"/>
+                        </process>
+                      </operator>
+                      <connect from_port="input 1" to_op="Cross Validation SVM" to_port="example set"/>
+                      <connect from_op="Cross Validation SVM" from_port="model" to_port="model"/>
+                      <connect from_op="Cross Validation SVM" from_port="performance 1" to_port="performance"/>
+                      <portSpacing port="source_input 1" spacing="0"/>
+                      <portSpacing port="source_input 2" spacing="0"/>
+                      <portSpacing port="sink_performance" spacing="0"/>
+                      <portSpacing port="sink_model" spacing="0"/>
+                      <portSpacing port="sink_output 1" spacing="0"/>
+                    </process>
+                  </operator>
+                  <operator activated="true" class="subprocess" compatibility="9.9.003" expanded="true" height="82" name="Subprocess Prediction model" width="90" x="190" y="245">
+                    <process expanded="true">
+                      <operator activated="true" class="extract_macro" compatibility="9.9.003" expanded="true" height="68" name="Extract Macro (3)" width="90" x="95" y="32">
+                        <parameter key="macro" value="attributes"/>
+                        <parameter key="macro_type" value="number_of_attributes"/>
+                        <parameter key="statistics" value="average"/>
+                        <parameter key="attribute_name" value=""/>
+                        <list key="additional_macros"/>
+                      </operator>
+                      <operator activated="true" class="generate_macro" compatibility="9.9.003" expanded="true" height="82" name="Generate Macro" width="90" x="249" y="34">
+                        <list key="function_descriptions">
+                          <parameter key="gamma" value="1/eval(%{attributes})"/>
+                        </list>
+                      </operator>
+                      <operator activated="true" class="support_vector_machine_libsvm" compatibility="9.9.003" expanded="true" height="82" name="BASE&gt; SVM (2)" width="90" x="441" y="36">
+                        <parameter key="svm_type" value="C-SVC"/>
+                        <parameter key="kernel_type" value="rbf"/>
+                        <parameter key="degree" value="3"/>
+                        <parameter key="gamma" value="%{gamma}"/>
+                        <parameter key="coef0" value="0.0"/>
+                        <parameter key="C" value="1.0"/>
+                        <parameter key="nu" value="0.5"/>
+                        <parameter key="cache_size" value="20048"/>
+                        <parameter key="epsilon" value="0.001"/>
+                        <parameter key="p" value="0.1"/>
+                        <list key="class_weights"/>
+                        <parameter key="shrinking" value="true"/>
+                        <parameter key="calculate_confidences" value="false"/>
+                        <parameter key="confidence_for_multiclass" value="true"/>
+                      </operator>
+                      <connect from_port="in 1" to_op="Extract Macro (3)" to_port="example set"/>
+                      <connect from_op="Extract Macro (3)" from_port="example set" to_op="Generate Macro" to_port="through 1"/>
+                      <connect from_op="Generate Macro" from_port="through 1" to_op="BASE&gt; SVM (2)" to_port="training set"/>
+                      <connect from_op="BASE&gt; SVM (2)" from_port="model" to_port="out 1"/>
+                      <portSpacing port="source_in 1" spacing="0"/>
+                      <portSpacing port="source_in 2" spacing="0"/>
+                      <portSpacing port="sink_out 1" spacing="0"/>
+                      <portSpacing port="sink_out 2" spacing="0"/>
+                      <description align="center" color="yellow" colored="false" height="105" resized="false" width="180" x="211" y="310">Type your comment</description>
+                    </process>
+                  </operator>
+                  <connect from_port="in 1" to_op="Subprocess Prediction model" to_port="in 1"/>
+                  <connect from_op="Subprocess Prediction model" from_port="out 1" to_port="out 1"/>
+                  <portSpacing port="source_in 1" spacing="0"/>
+                  <portSpacing port="source_in 2" spacing="0"/>
+                  <portSpacing port="sink_out 1" spacing="0"/>
+                  <portSpacing port="sink_out 2" spacing="0"/>
+                </process>
+                <process expanded="true">
+                  <operator activated="true" class="default_model" compatibility="9.9.003" expanded="true" height="82" name="Default Model" width="90" x="193" y="41">
+                    <parameter key="method" value="mode"/>
+                    <parameter key="constant" value="0.0"/>
+                    <parameter key="attribute_name" value=""/>
+                  </operator>
+                  <connect from_port="in 1" to_op="Default Model" to_port="training set"/>
+                  <connect from_op="Default Model" from_port="model" to_port="out 1"/>
+                  <portSpacing port="source_in 1" spacing="0"/>
+                  <portSpacing port="source_in 2" spacing="0"/>
+                  <portSpacing port="sink_out 1" spacing="0"/>
+                  <portSpacing port="sink_out 2" spacing="0"/>
+                </process>
+                <description align="center" color="transparent" colored="false" width="126">Support two small clusters - then return default model</description>
+              </operator>
+              <operator activated="true" class="log" compatibility="9.9.003" expanded="true" height="82" name="Log Size" width="90" x="537" y="179">
+                <parameter key="filename" value="%{resultsDir}%{entryName}_SVM_Ensemble_CV_size_log.csv"/>
+                <list key="log">
+                  <parameter key="size" value="operator.Performance SampleSize (2).value.performance"/>
+                  <parameter key="iter" value="operator.Performance SampleSize (2).value.applycount"/>
+                  <parameter key="mainSize" value="operator.Performance MainSize.value.performance"/>
+                </list>
+                <parameter key="sorting_type" value="none"/>
+                <parameter key="sorting_k" value="100"/>
+                <parameter key="persistent" value="true"/>
+              </operator>
+              <operator activated="true" class="remember" compatibility="9.9.003" expanded="true" height="68" name="Remember" width="90" x="739" y="100">
+                <parameter key="name" value="%{cluster_name}"/>
+                <parameter key="io_object" value="PredictionModel"/>
+                <parameter key="store_which" value="1"/>
+                <parameter key="remove_from_process" value="true"/>
+              </operator>
+              <connect from_port="cluster subset" to_op="Extract Macro" to_port="example set"/>
+              <connect from_op="Extract Macro" from_port="example set" to_op="Performance SampleSize (2)" to_port="example set"/>
+              <connect from_op="Performance SampleSize (2)" from_port="example set" to_op="Handle Exception (2)" to_port="in 1"/>
+              <connect from_op="Handle Exception (2)" from_port="out 1" to_op="Log Size" to_port="through 1"/>
+              <connect from_op="Log Size" from_port="through 1" to_op="Remember" to_port="store"/>
+              <connect from_op="Remember" from_port="stored" to_port="out 1"/>
+              <portSpacing port="source_cluster subset" spacing="0"/>
+              <portSpacing port="source_in 1" spacing="0"/>
+              <portSpacing port="sink_out 1" spacing="0"/>
+              <portSpacing port="sink_out 2" spacing="0"/>
+            </process>
+          </operator>
+          <connect from_port="in 1" to_op="Vector Quantization (VQ)" to_port="exampleSet"/>
+          <connect from_op="Vector Quantization (VQ)" from_port="exampleSet" to_op="Loop Clusters" to_port="example set"/>
+          <connect from_op="Vector Quantization (VQ)" from_port="model" to_port="out 1"/>
+          <portSpacing port="source_in 1" spacing="0"/>
+          <portSpacing port="source_in 2" spacing="0"/>
+          <portSpacing port="sink_out 1" spacing="0"/>
+          <portSpacing port="sink_out 2" spacing="229"/>
+          <description align="center" color="yellow" colored="false" height="105" resized="false" width="180" x="503" y="490">Type your comment</description>
+        </process>
+      </operator>
+      <operator activated="true" class="rm_tools:LogValue2Annotation" compatibility="7.0.000" expanded="true" height="68" name="LogValue2Annotation" width="90" x="508" y="84">
+        <list key="annotations">
+          <parameter key="executionTime" value="operator.Subprocess.value.execution-time"/>
+        </list>
+        <parameter key="duplicate_annotations" value="overwrite"/>
+      </operator>
+      <operator activated="true" class="retrieve" compatibility="9.9.003" expanded="true" height="68" name="Retrieve (2)" width="90" x="76" y="358">
+        <parameter key="repository_entry" value="%{dataRepositoryDir}%{entryNameTest}"/>
+      </operator>
+      <operator activated="true" class="rm_tools:Annotation2LogValue" compatibility="7.0.000" expanded="true" height="68" name="Annotation2LogValue" width="90" x="365" y="242">
+        <parameter key="annotation_name" value="executionTime"/>
+      </operator>
+      <operator activated="true" class="subprocess" compatibility="9.9.003" expanded="true" height="103" name="Subprocess ApplyModel" width="90" x="550" y="423">
+        <process expanded="true">
+          <operator activated="true" class="apply_model" compatibility="9.9.003" expanded="true" height="82" name="Apply Model" width="90" x="138" y="52">
+            <list key="application_parameters"/>
+            <parameter key="create_view" value="false"/>
+            <description align="center" color="transparent" colored="false" width="126">Apply k-means to find region</description>
+          </operator>
+          <operator activated="true" class="loop_clusters" compatibility="9.9.003" expanded="true" height="82" name="Loop Clusters for prediction" width="90" x="414" y="80">
+            <process expanded="true">
+              <operator activated="true" class="extract_macro" compatibility="9.9.003" expanded="true" height="68" name="Extract Macro (2)" width="90" x="85" y="60">
+                <parameter key="macro" value="cluster_name"/>
+                <parameter key="macro_type" value="data_value"/>
+                <parameter key="statistics" value="average"/>
+                <parameter key="attribute_name" value="cluster"/>
+                <parameter key="example_index" value="1"/>
+                <list key="additional_macros"/>
+                <description align="center" color="transparent" colored="false" width="126">get cluster name&lt;br/&gt;</description>
+              </operator>
+              <operator activated="true" class="recall" compatibility="9.9.003" expanded="true" height="68" name="Recall" width="90" x="105" y="212">
+                <parameter key="name" value="%{cluster_name}"/>
+                <parameter key="io_object" value="PredictionModel"/>
+                <parameter key="remove_from_store" value="false"/>
+                <description align="center" color="transparent" colored="false" width="126">Based on cluster name get classifier</description>
+              </operator>
+              <operator activated="true" class="apply_model" compatibility="9.9.003" expanded="true" height="82" name="Apply Model (2)" width="90" x="267" y="146">
+                <list key="application_parameters"/>
+                <parameter key="create_view" value="false"/>
+                <description align="center" color="transparent" colored="false" width="126">Apply Classifier</description>
+              </operator>
+              <operator activated="true" class="handle_exception" compatibility="9.9.003" expanded="true" height="82" name="Handle Exception" width="90" x="540" y="122">
+                <parameter key="add_details_to_log" value="false"/>
+                <process expanded="true">
+                  <operator activated="true" class="recall" compatibility="9.9.003" expanded="true" height="68" name="Recall (2)" width="90" x="126" y="23">
+                    <parameter key="name" value="results_set"/>
+                    <parameter key="io_object" value="ExampleSet"/>
+                    <parameter key="remove_from_store" value="true"/>
+                  </operator>
+                  <operator activated="true" class="append" compatibility="9.9.003" expanded="true" height="103" name="Append" width="90" x="288" y="103">
+                    <parameter key="datamanagement" value="double_array"/>
+                    <parameter key="data_management" value="auto"/>
+                    <parameter key="merge_type" value="all"/>
+                  </operator>
+                  <connect from_port="in 1" to_op="Append" to_port="example set 2"/>
+                  <connect from_op="Recall (2)" from_port="result" to_op="Append" to_port="example set 1"/>
+                  <connect from_op="Append" from_port="merged set" to_port="out 1"/>
+                  <portSpacing port="source_in 1" spacing="0"/>
+                  <portSpacing port="source_in 2" spacing="0"/>
+                  <portSpacing port="sink_out 1" spacing="0"/>
+                  <portSpacing port="sink_out 2" spacing="0"/>
+                </process>
+                <process expanded="true">
+                  <connect from_port="in 1" to_port="out 1"/>
+                  <portSpacing port="source_in 1" spacing="0"/>
+                  <portSpacing port="source_in 2" spacing="0"/>
+                  <portSpacing port="sink_out 1" spacing="0"/>
+                  <portSpacing port="sink_out 2" spacing="0"/>
+                </process>
+                <description align="center" color="transparent" colored="false" width="126">combine datasets from this cluster with the remining ones</description>
+              </operator>
+              <operator activated="true" class="remember" compatibility="9.9.003" expanded="true" height="68" name="Remember (2)" width="90" x="725" y="126">
+                <parameter key="name" value="results_set"/>
+                <parameter key="io_object" value="ExampleSet"/>
+                <parameter key="store_which" value="1"/>
+                <parameter key="remove_from_process" value="true"/>
+                <description align="center" color="transparent" colored="false" width="126">remember dataset with prediction for the following clusters</description>
+              </operator>
+              <connect from_port="cluster subset" to_op="Extract Macro (2)" to_port="example set"/>
+              <connect from_op="Extract Macro (2)" from_port="example set" to_op="Apply Model (2)" to_port="unlabelled data"/>
+              <connect from_op="Recall" from_port="result" to_op="Apply Model (2)" to_port="model"/>
+              <connect from_op="Apply Model (2)" from_port="labelled data" to_op="Handle Exception" to_port="in 1"/>
+              <connect from_op="Handle Exception" from_port="out 1" to_op="Remember (2)" to_port="store"/>
+              <connect from_op="Remember (2)" from_port="stored" to_port="out 1"/>
+              <portSpacing port="source_cluster subset" spacing="0"/>
+              <portSpacing port="source_in 1" spacing="0"/>
+              <portSpacing port="sink_out 1" spacing="0"/>
+              <portSpacing port="sink_out 2" spacing="0"/>
+            </process>
+            <description align="center" color="transparent" colored="false" width="126">apply models related to clusters</description>
+          </operator>
+          <operator activated="true" class="recall" compatibility="9.9.003" expanded="true" height="68" name="Recall (3)" width="90" x="680" y="69">
+            <parameter key="name" value="results_set"/>
+            <parameter key="io_object" value="ExampleSet"/>
+            <parameter key="remove_from_store" value="true"/>
+            <description align="center" color="transparent" colored="false" width="126">recall combined dataset collected from particular clusters</description>
+          </operator>
+          <connect from_port="in 1" to_op="Apply Model" to_port="model"/>
+          <connect from_port="in 2" to_op="Apply Model" to_port="unlabelled data"/>
+          <connect from_op="Apply Model" from_port="labelled data" to_op="Loop Clusters for prediction" to_port="example set"/>
+          <connect from_op="Recall (3)" from_port="result" to_port="out 1"/>
+          <portSpacing port="source_in 1" spacing="0"/>
+          <portSpacing port="source_in 2" spacing="0"/>
+          <portSpacing port="source_in 3" spacing="0"/>
+          <portSpacing port="sink_out 1" spacing="0"/>
+          <portSpacing port="sink_out 2" spacing="0"/>
+        </process>
+      </operator>
+      <operator activated="true" class="performance_classification" compatibility="9.9.003" expanded="true" height="82" name="Performance" width="90" x="710" y="257">
+        <parameter key="main_criterion" value="first"/>
+        <parameter key="accuracy" value="true"/>
+        <parameter key="classification_error" value="false"/>
+        <parameter key="kappa" value="false"/>
+        <parameter key="weighted_mean_recall" value="true"/>
+        <parameter key="weighted_mean_precision" value="false"/>
+        <parameter key="spearman_rho" value="false"/>
+        <parameter key="kendall_tau" value="false"/>
+        <parameter key="absolute_error" value="false"/>
+        <parameter key="relative_error" value="false"/>
+        <parameter key="relative_error_lenient" value="false"/>
+        <parameter key="relative_error_strict" value="false"/>
+        <parameter key="normalized_absolute_error" value="false"/>
+        <parameter key="root_mean_squared_error" value="false"/>
+        <parameter key="root_relative_squared_error" value="false"/>
+        <parameter key="squared_error" value="false"/>
+        <parameter key="correlation" value="false"/>
+        <parameter key="squared_correlation" value="false"/>
+        <parameter key="cross-entropy" value="false"/>
+        <parameter key="margin" value="false"/>
+        <parameter key="soft_margin_loss" value="false"/>
+        <parameter key="logistic_loss" value="false"/>
+        <parameter key="skip_undefined_labels" value="true"/>
+        <parameter key="use_example_weights" value="false"/>
+        <list key="class_weights"/>
+      </operator>
+      <operator activated="true" class="log" compatibility="9.9.003" expanded="true" height="82" name="Log" width="90" x="885" y="257">
+        <parameter key="filename" value="%{resultsDir}%{entryName}_SVM_Ensemble_CV_log.csv"/>
+        <list key="log">
+          <parameter key="ModelOptimizationExecutionTime" value="operator.Annotation2LogValue.value.annotationValue"/>
+          <parameter key="ACC" value="operator.Performance.value.accuracy"/>
+          <parameter key="BACC" value="operator.Performance.value.weighted_mean_recall"/>
+          <parameter key="ModelPredictionTime" value="operator.Subprocess ApplyModel.value.execution-time"/>
+          <parameter key="ProtoN" value="operator.Vector Quantization (VQ).parameter.Number of neurons"/>
+        </list>
+        <parameter key="sorting_type" value="none"/>
+        <parameter key="sorting_k" value="100"/>
+        <parameter key="persistent" value="true"/>
+      </operator>
+      <operator activated="true" class="subprocess" compatibility="9.9.003" expanded="true" height="82" name="Subprocess Logs to Data" width="90" x="1068" y="255">
+        <process expanded="true">
+          <operator activated="true" class="multiply" compatibility="9.9.003" expanded="true" height="103" name="Multiply" width="90" x="294" y="142"/>
+          <operator activated="true" class="log_to_data" compatibility="9.9.003" expanded="true" height="103" name="Log to Data" width="90" x="428" y="143">
+            <parameter key="log_name" value="Log"/>
+          </operator>
+          <operator activated="true" class="parse_numbers" compatibility="9.9.003" expanded="true" height="82" name="Parse Numbers" width="90" x="562" y="140">
+            <parameter key="attribute_filter_type" value="all"/>
+            <parameter key="attribute" value=""/>
+            <parameter key="attributes" value=""/>
+            <parameter key="use_except_expression" value="false"/>
+            <parameter key="value_type" value="nominal"/>
+            <parameter key="use_value_type_exception" value="false"/>
+            <parameter key="except_value_type" value="file_path"/>
+            <parameter key="block_type" value="single_value"/>
+            <parameter key="use_block_type_exception" value="false"/>
+            <parameter key="except_block_type" value="single_value"/>
+            <parameter key="invert_selection" value="false"/>
+            <parameter key="include_special_attributes" value="false"/>
+            <parameter key="decimal_character" value="."/>
+            <parameter key="grouped_digits" value="false"/>
+            <parameter key="grouping_character" value=","/>
+            <parameter key="infinity_representation" value=""/>
+            <parameter key="unparsable_value_handling" value="fail"/>
+          </operator>
+          <operator activated="true" class="aggregate" compatibility="9.9.003" expanded="true" height="82" name="Aggregate" width="90" x="696" y="142">
+            <parameter key="use_default_aggregation" value="false"/>
+            <parameter key="attribute_filter_type" value="all"/>
+            <parameter key="attribute" value=""/>
+            <parameter key="attributes" value=""/>
+            <parameter key="use_except_expression" value="false"/>
+            <parameter key="value_type" value="attribute_value"/>
+            <parameter key="use_value_type_exception" value="false"/>
+            <parameter key="except_value_type" value="time"/>
+            <parameter key="block_type" value="attribute_block"/>
+            <parameter key="use_block_type_exception" value="false"/>
+            <parameter key="except_block_type" value="value_matrix_row_start"/>
+            <parameter key="invert_selection" value="false"/>
+            <parameter key="include_special_attributes" value="false"/>
+            <parameter key="default_aggregation_function" value="average"/>
+            <list key="aggregation_attributes">
+              <parameter key="ModelOptimizationExecutionTime" value="average"/>
+              <parameter key="ModelPredictionTime" value="average"/>
+              <parameter key="ACC" value="average"/>
+              <parameter key="BACC" value="average"/>
+              <parameter key="ModelOptimizationExecutionTime" value="standard_deviation"/>
+              <parameter key="ModelPredictionTime" value="standard_deviation"/>
+              <parameter key="ACC" value="standard_deviation"/>
+              <parameter key="BACC" value="standard_deviation"/>
+            </list>
+            <parameter key="group_by_attributes" value=""/>
+            <parameter key="count_all_combinations" value="false"/>
+            <parameter key="only_distinct" value="false"/>
+            <parameter key="ignore_missings" value="true"/>
+          </operator>
+          <operator activated="true" class="generate_id" compatibility="9.9.003" expanded="true" height="82" name="Generate ID" width="90" x="954" y="143">
+            <parameter key="create_nominal_ids" value="false"/>
+            <parameter key="offset" value="0"/>
+          </operator>
+          <operator activated="true" class="log_to_data" compatibility="9.9.003" expanded="true" height="103" name="Log DataSize to Data" width="90" x="430" y="292">
+            <parameter key="log_name" value="Log Size"/>
+          </operator>
+          <operator activated="true" class="parse_numbers" compatibility="9.9.003" expanded="true" height="82" name="Parse Numbers (2)" width="90" x="564" y="288">
+            <parameter key="attribute_filter_type" value="all"/>
+            <parameter key="attribute" value=""/>
+            <parameter key="attributes" value=""/>
+            <parameter key="use_except_expression" value="false"/>
+            <parameter key="value_type" value="nominal"/>
+            <parameter key="use_value_type_exception" value="false"/>
+            <parameter key="except_value_type" value="file_path"/>
+            <parameter key="block_type" value="single_value"/>
+            <parameter key="use_block_type_exception" value="false"/>
+            <parameter key="except_block_type" value="single_value"/>
+            <parameter key="invert_selection" value="false"/>
+            <parameter key="include_special_attributes" value="false"/>
+            <parameter key="decimal_character" value="."/>
+            <parameter key="grouped_digits" value="false"/>
+            <parameter key="grouping_character" value=","/>
+            <parameter key="infinity_representation" value=""/>
+            <parameter key="unparsable_value_handling" value="fail"/>
+          </operator>
+          <operator activated="true" class="aggregate" compatibility="9.9.003" expanded="true" height="82" name="Aggregate Sizes" width="90" x="698" y="288">
+            <parameter key="use_default_aggregation" value="false"/>
+            <parameter key="attribute_filter_type" value="all"/>
+            <parameter key="attribute" value=""/>
+            <parameter key="attributes" value=""/>
+            <parameter key="use_except_expression" value="false"/>
+            <parameter key="value_type" value="attribute_value"/>
+            <parameter key="use_value_type_exception" value="false"/>
+            <parameter key="except_value_type" value="time"/>
+            <parameter key="block_type" value="attribute_block"/>
+            <parameter key="use_block_type_exception" value="false"/>
+            <parameter key="except_block_type" value="value_matrix_row_start"/>
+            <parameter key="invert_selection" value="false"/>
+            <parameter key="include_special_attributes" value="false"/>
+            <parameter key="default_aggregation_function" value="average"/>
+            <list key="aggregation_attributes">
+              <parameter key="size" value="average"/>
+              <parameter key="size" value="maximum"/>
+              <parameter key="size" value="minimum"/>
+              <parameter key="mainSize" value="average"/>
+            </list>
+            <parameter key="group_by_attributes" value="iter"/>
+            <parameter key="count_all_combinations" value="false"/>
+            <parameter key="only_distinct" value="false"/>
+            <parameter key="ignore_missings" value="true"/>
+          </operator>
+          <operator activated="true" class="aggregate" compatibility="9.9.003" expanded="true" height="82" name="Aggregate Avg Size" width="90" x="832" y="288">
+            <parameter key="use_default_aggregation" value="false"/>
+            <parameter key="attribute_filter_type" value="all"/>
+            <parameter key="attribute" value=""/>
+            <parameter key="attributes" value=""/>
+            <parameter key="use_except_expression" value="false"/>
+            <parameter key="value_type" value="attribute_value"/>
+            <parameter key="use_value_type_exception" value="false"/>
+            <parameter key="except_value_type" value="time"/>
+            <parameter key="block_type" value="attribute_block"/>
+            <parameter key="use_block_type_exception" value="false"/>
+            <parameter key="except_block_type" value="value_matrix_row_start"/>
+            <parameter key="invert_selection" value="false"/>
+            <parameter key="include_special_attributes" value="false"/>
+            <parameter key="default_aggregation_function" value="average"/>
+            <list key="aggregation_attributes">
+              <parameter key="average(size)" value="average"/>
+              <parameter key="minimum(size)" value="average"/>
+              <parameter key="maximum(size)" value="average"/>
+              <parameter key="average(size)" value="standard_deviation"/>
+              <parameter key="minimum(size)" value="standard_deviation"/>
+              <parameter key="maximum(size)" value="standard_deviation"/>
+              <parameter key="average(mainSize)" value="average"/>
+              <parameter key="average(mainSize)" value="standard_deviation"/>
+            </list>
+            <parameter key="group_by_attributes" value=""/>
+            <parameter key="count_all_combinations" value="false"/>
+            <parameter key="only_distinct" value="false"/>
+            <parameter key="ignore_missings" value="true"/>
+          </operator>
+          <operator activated="true" class="generate_id" compatibility="9.9.003" expanded="true" height="82" name="Generate ID (2)" width="90" x="966" y="285">
+            <parameter key="create_nominal_ids" value="false"/>
+            <parameter key="offset" value="0"/>
+          </operator>
+          <operator activated="true" class="concurrency:join" compatibility="9.8.001" expanded="true" height="82" name="Join" width="90" x="1088" y="200">
+            <parameter key="remove_double_attributes" value="true"/>
+            <parameter key="join_type" value="inner"/>
+            <parameter key="use_id_attribute_as_key" value="true"/>
+            <list key="key_attributes"/>
+            <parameter key="keep_both_join_attributes" value="false"/>
+          </operator>
+          <connect from_port="in 1" to_op="Multiply" to_port="input"/>
+          <connect from_op="Multiply" from_port="output 1" to_op="Log to Data" to_port="through 1"/>
+          <connect from_op="Multiply" from_port="output 2" to_op="Log DataSize to Data" to_port="through 1"/>
+          <connect from_op="Log to Data" from_port="exampleSet" to_op="Parse Numbers" to_port="example set input"/>
+          <connect from_op="Parse Numbers" from_port="example set output" to_op="Aggregate" to_port="example set input"/>
+          <connect from_op="Aggregate" from_port="example set output" to_op="Generate ID" to_port="example set input"/>
+          <connect from_op="Generate ID" from_port="example set output" to_op="Join" to_port="left"/>
+          <connect from_op="Log DataSize to Data" from_port="exampleSet" to_op="Parse Numbers (2)" to_port="example set input"/>
+          <connect from_op="Parse Numbers (2)" from_port="example set output" to_op="Aggregate Sizes" to_port="example set input"/>
+          <connect from_op="Aggregate Sizes" from_port="example set output" to_op="Aggregate Avg Size" to_port="example set input"/>
+          <connect from_op="Aggregate Avg Size" from_port="example set output" to_op="Generate ID (2)" to_port="example set input"/>
+          <connect from_op="Generate ID (2)" from_port="example set output" to_op="Join" to_port="right"/>
+          <connect from_op="Join" from_port="join" to_port="out 1"/>
+          <portSpacing port="source_in 1" spacing="0"/>
+          <portSpacing port="source_in 2" spacing="0"/>
+          <portSpacing port="sink_out 1" spacing="0"/>
+          <portSpacing port="sink_out 2" spacing="0"/>
+        </process>
+        <description align="center" color="transparent" colored="false" width="126">Konwersja log&amp;#243;w do danych</description>
+      </operator>
+      <operator activated="true" class="write_csv" compatibility="9.9.003" expanded="true" height="82" name="Write CSV" width="90" x="1329" y="34">
+        <parameter key="csv_file" value="%{resultsDir}%{entryName}_SVM_Ensemble.csv"/>
+        <parameter key="column_separator" value=";"/>
+        <parameter key="write_attribute_names" value="true"/>
+        <parameter key="quote_nominal_values" value="true"/>
+        <parameter key="format_date_attributes" value="true"/>
+        <parameter key="append_to_file" value="false"/>
+        <parameter key="encoding" value="SYSTEM"/>
+      </operator>
+      <connect from_op="Retrieve" from_port="output" to_op="Performance MainSize" to_port="example set"/>
+      <connect from_op="Performance MainSize" from_port="example set" to_op="Subprocess" to_port="in 1"/>
+      <connect from_op="Subprocess" from_port="out 1" to_op="LogValue2Annotation" to_port="input"/>
+      <connect from_op="LogValue2Annotation" from_port="output" to_op="Annotation2LogValue" to_port="input"/>
+      <connect from_op="Retrieve (2)" from_port="output" to_op="Subprocess ApplyModel" to_port="in 2"/>
+      <connect from_op="Annotation2LogValue" from_port="output" to_op="Subprocess ApplyModel" to_port="in 1"/>
+      <connect from_op="Subprocess ApplyModel" from_port="out 1" to_op="Performance" to_port="labelled data"/>
+      <connect from_op="Performance" from_port="performance" to_op="Log" to_port="through 1"/>
+      <connect from_op="Log" from_port="through 1" to_op="Subprocess Logs to Data" to_port="in 1"/>
+      <connect from_op="Subprocess Logs to Data" from_port="out 1" to_op="Write CSV" to_port="input"/>
+      <connect from_op="Write CSV" from_port="through" to_port="result 1"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+      <description align="center" color="yellow" colored="false" height="139" resized="false" width="180" x="10" y="10">Proces based on simple clustering</description>
+    </process>
+  </operator>
+</process>
